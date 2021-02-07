@@ -1,12 +1,21 @@
 const express = require('express');
-const { Task } = require('./models/task');
+const morgan = require('morgan');
+const winston = require('./config/winston');
 require('./db/mongoose');
+
+const node_env = 'development';
+process.env.NODE_ENV = node_env;
+
+// models
+const { Task } = require('./models/task');
 const { User } = require('./models/user');
 
 const port = process.env.PORT || 3001;
 
 const app = express();
 app.use(express.json());
+app.use(morgan('combined', { stream: winston.stream }));
+// app.use('/api', router);
 
 app.post('/api/users', (req, res) => {
   const user = new User(req.body);

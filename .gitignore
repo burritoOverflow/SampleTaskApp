@@ -120,3 +120,6 @@ dist
 
 # demo file for working with mongodb module
 mongodb.js
+
+# log files
+*.log
