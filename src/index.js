@@ -46,11 +46,56 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
+app.patch('/api/users/:id', async (req, res) => {
+  const providedParams = Object.keys(req.body);
+  const updatableParams = ['name', 'email', 'password', 'age'];
+  const _id = req.params.id;
+  const isValidUpdate = providedParams.every((updateKey) => {
+    return updatableParams.includes(updateKey);
+  });
+
+  if (!isValidUpdate) {
+    return res.status(400).send({ error: 'Invalid update attempted' });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(_id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!user) {
+      res.status(404).send({ result: `No user for id ${_id}` });
+    }
+
+    res.status(200).send(user);
+  } catch (error) {
+    // check for validation issue(s); inform user
+    res.status(400).send({ result: error._message });
+  }
+});
+
 app.post('/api/users', async (req, res) => {
   const user = new User(req.body);
   try {
     const _user = await user.save();
     res.status(201).send(_user);
+  } catch (error) {
+    console.error(error._message);
+    res.status(400).send({ status: error._message });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const _id = req.params.id;
+  try {
+    const user = await User.findByIdAndDelete(_id);
+    // no user to delete
+    if (!user) {
+      res.status(404).send({ status: 'No user with the provided id' });
+    }
+
+    res.status(202).send(user);
   } catch (error) {
     console.error(error._message);
     res.status(400).send({ status: error._message });
@@ -69,7 +114,6 @@ app.get('/api/tasks', async (req, res) => {
 app.get('/api/tasks/:id', async (req, res) => {
   // get task by id
   const _id = req.params.id;
-
   try {
     const task = await Task.findById(_id);
     if (!task) {
@@ -86,11 +130,63 @@ app.get('/api/tasks/:id', async (req, res) => {
   }
 });
 
+app.patch('/api/tasks/:id', async (req, res) => {
+  const providedParams = Object.keys(req.body);
+  let isValidUpdate = false;
+
+  // cannot update the task name; can only change the status
+  if (providedParams.includes('task')) {
+    isValidUpdate = false;
+  }
+
+  const updatableParams = ['completed'];
+  // the only allowable update here is the completed status
+  isValidUpdate = providedParams.every((updateKey) => {
+    return updatableParams.includes(updateKey);
+  });
+
+  if (!isValidUpdate) {
+    return res.status(400).send({ error: 'Invalid update attempted' });
+  }
+
+  const _id = req.params.id;
+  try {
+    const task = await Task.findByIdAndUpdate(_id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!task) {
+      res.status(404).send({ result: `No task for id ${_id}` });
+    }
+
+    res.status(200).send(task);
+  } catch (error) {
+    // check for validation issue(s); inform user
+    res.status(400).send({ result: error._message });
+  }
+});
+
 app.post('/api/tasks', async (req, res) => {
   const task = new Task(req.body);
   try {
     const _task = await task.save();
     res.status(201).send(_task);
+  } catch (error) {
+    console.error(error._message);
+    res.status(400).send({ status: error._message });
+  }
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  const _id = req.params.id;
+  try {
+    const task = await Task.findByIdAndDelete(_id);
+    // no user to delete
+    if (!task) {
+      res.status(404).send({ status: 'No task with the provided id' });
+    }
+    res.status(202).send(task);
   } catch (error) {
     console.error(error._message);
     res.status(400).send({ status: error._message });
