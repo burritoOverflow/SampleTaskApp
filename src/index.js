@@ -17,92 +17,84 @@ app.use(express.json());
 app.use(morgan('combined', { stream: winston.stream }));
 // app.use('/api', router);
 
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   // return all users
-  User.find({})
-    .then((users) => {
-      res.status(200).send(users);
-    })
-    .catch((error) => {
-      res.status(500).send();
-    });
+  try {
+    const users = await User.find({});
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).send();
+  }
 });
 
-app.get('/api/users/:id', (req, res) => {
+app.get('/api/users/:id', async (req, res) => {
   // get user by id
   const _id = req.params.id;
-  User.findById(_id)
-    .then((user) => {
-      if (!user) {
-        res.status(404).send({
-          'Not Found': 'No User Exists for that ID',
-        });
-      }
-      res.status(200).send(user);
-    })
-    .catch((error) => {
-      if (error) {
-        console.error(error);
-        res.status(400).send({ error: 'Invalid ID provided' });
-      }
-    });
+  try {
+    const user = await User.findById(_id);
+    if (!user) {
+      res.status(404).send({
+        'Not Found': 'No User Exists for that ID',
+      });
+    }
+    res.status(200).send(user);
+  } catch (error) {
+    if (error) {
+      console.error(error);
+      res.status(400).send({ error: 'Invalid ID provided' });
+    }
+  }
 });
 
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const user = new User(req.body);
-  user
-    .save()
-    .then((_user) => {
-      console.log(_user);
-      res.status(201).send(_user);
-    })
-    .catch((error) => {
-      console.error(error._message);
-      res.status(400).send({ status: error._message });
-    });
+  try {
+    const _user = await user.save();
+    res.status(201).send(_user);
+  } catch (error) {
+    console.error(error._message);
+    res.status(400).send({ status: error._message });
+  }
 });
 
-app.get('/api/tasks', (req, res) => {
-  Task.find({})
-    .then((tasks) => {
-      res.status(200).send(tasks);
-    })
-    .catch((error) => {
-      res.status(500).send();
-    });
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const tasks = await Task.find({});
+    res.status(200).send(tasks);
+  } catch (error) {
+    res.status(500).send();
+  }
 });
 
-app.get('/api/tasks/:id', (req, res) => {
+app.get('/api/tasks/:id', async (req, res) => {
   // get task by id
   const _id = req.params.id;
-  Task.findById(_id)
-    .then((task) => {
-      if (!task) {
-        res.status(404).send({
-          'Not Found': 'No Task Exists for that ID',
-        });
-      }
-      res.status(200).send(task);
-    })
-    .catch((error) => {
-      if (error) {
-        console.error(error);
-        res.status(400).send({ error: 'Invalid ID provided' });
-      }
-    });
+
+  try {
+    const task = await Task.findById(_id);
+    if (!task) {
+      res.status(404).send({
+        'Not Found': 'No Task Exists for that ID',
+      });
+    }
+    res.status(200).send(task);
+  } catch (error) {
+    if (error) {
+      console.error(error);
+      res.status(400).send({ error: 'Invalid ID provided' });
+    }
+  }
 });
 
-app.post('/api/tasks', (req, res) => {
+app.post('/api/tasks', async (req, res) => {
   const task = new Task(req.body);
-  task
-    .save()
-    .then((_task) => {
-      console.log(_task);
-      res.status(201).send(_task);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  try {
+    const _task = await task.save();
+    res.status(201).send(_task);
+  } catch (error) {
+    console.error(error._message);
+    res.status(400).send({ status: error._message });
+  }
 });
 
 app.listen(port, () => {
