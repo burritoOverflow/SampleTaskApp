@@ -2,18 +2,15 @@ const express = require('express');
 const router = express.Router();
 
 const { User } = require('../models/user');
+const auth = require('../middleware/auth');
 
-router.get('/users', async (req, res) => {
-  // return all users
-  try {
-    const users = await User.find({});
-    res.status(200).send(users);
-  } catch (error) {
-    res.status(500).send();
-  }
+// requires auth; returns only the user's profile
+router.get('/users/me', auth, async (req, res) => {
+  // user is added to the request in the auth middleware
+  res.status(200).send(req.user);
 });
 
-router.get('/users/:id', async (req, res) => {
+router.get('/users/:id', auth, async (req, res) => {
   // get user by id
   const _id = req.params.id;
   try {

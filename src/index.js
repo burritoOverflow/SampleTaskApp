@@ -15,15 +15,7 @@ const port = process.env.PORT || 3001;
 
 const app = express();
 app.use(express.json());
-
-app.use((req, res, next) => {
-  // maintenance mode
-  if (process.env.NODE_ENV === 'maintenance') {
-    res.status(503).send('Under maintenance');
-  } else {
-    next();
-  }
-});
+app.use(require('./middleware/maintenance'));
 
 app.use(morgan('combined', { stream: winston.stream }));
 app.use('/api', taskRouter);
