@@ -71,7 +71,9 @@ router.post('/users', async (req, res) => {
   const user = new User(req.body);
   try {
     const _user = await user.save();
-    res.status(201).send(_user);
+    // after creation, generate an auth token
+    const token = await _user.generateAuthToken();
+    res.status(201).send({ user: _user, token });
   } catch (error) {
     console.error(error._message);
     res.status(400).send({ status: error._message });
@@ -85,7 +87,11 @@ router.post('/users/login', async (req, res) => {
       req.body.email,
       req.body.password,
     );
-    res.status(200).send(user);
+    const token = await user.generateAuthToken();
+    res.status(200).send({
+      user,
+      token,
+    });
   } catch (error) {
     // return an error when login fails
     res.status(400).send({ status: error._message });

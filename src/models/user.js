@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { error } = require('winston');
+const jwt = require('jsonwebtoken');
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -27,6 +27,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
+    // add password requirements
     validate(value) {
       if (
         !validator.isStrongPassword(value, {
@@ -46,7 +47,27 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     min: 18,
   },
+  tokens: [
+    // store JWT with the user
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
+
+// adds an instance method
+// generate a jwt
+UserSchema.methods.generateAuthToken = async function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id.toString() }, 'thisisasecret');
+  // add the auth token to the user and save to the db
+  user.tokens = user.tokens.concat({ token });
+  await user.save();
+  return token;
+};
 
 // add an additional static method for finding a user by creds
 UserSchema.statics.findByCredentials = async (email, password) => {
