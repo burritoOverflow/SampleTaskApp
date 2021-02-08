@@ -45,22 +45,28 @@ router.patch('/users/:id', async (req, res) => {
   }
 
   try {
-    const user = await User.findByIdAndUpdate(_id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const user = await User.findById(_id);
 
     if (!user) {
       res.status(404).send({ result: `No user for id ${_id}` });
     }
 
+    // update each user parameter with the provided parameter
+    providedParams.forEach((updateParameter) => {
+      user[updateParameter] = req.body[updateParameter];
+    });
+
+    await user.save();
+
     res.status(200).send(user);
   } catch (error) {
     // check for validation issue(s); inform user
+    console.error(error);
     res.status(400).send({ result: error._message });
   }
 });
 
+// add a new user
 router.post('/users', async (req, res) => {
   const user = new User(req.body);
   try {
@@ -68,6 +74,20 @@ router.post('/users', async (req, res) => {
     res.status(201).send(_user);
   } catch (error) {
     console.error(error._message);
+    res.status(400).send({ status: error._message });
+  }
+});
+
+// authenticate a user
+router.post('/users/login', async (req, res) => {
+  try {
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password,
+    );
+    res.status(200).send(user);
+  } catch (error) {
+    // return an error when login fails
     res.status(400).send({ status: error._message });
   }
 });
