@@ -95,6 +95,42 @@ router.post('/users/login', async (req, res) => {
   }
 });
 
+// allow a user to logout of the current session
+router.post('/users/logout', auth, async (req, res) => {
+  try {
+    // w user added to the request, we'll just remove the token
+    req.user.tokens = req.user.tokens.filter((token) => {
+      // keep tokens that are not the token currently associated with the
+      // user in the array
+      return token.token !== req.token;
+    });
+
+    await req.user.save();
+    res.send({
+      result: 'logout success',
+    });
+  } catch (error) {
+    res.status(500).send({
+      result: 'logout failed',
+    });
+  }
+});
+
+// clear all existing sessions
+router.post('/users/logoutall', auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+    res.send({
+      result: 'logout all success',
+    });
+  } catch (error) {
+    res.status(500).send({
+      result: 'logout failed',
+    });
+  }
+});
+
 router.delete('/users/:id', async (req, res) => {
   const _id = req.params.id;
   try {

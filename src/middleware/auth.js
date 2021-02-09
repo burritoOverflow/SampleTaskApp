@@ -26,8 +26,10 @@ const auth = async (req, res, next) => {
     }
 
     // otherwise user is authenticated correctly
-    // so add the user to the request (avoid repeated look-up)
+    // so add the user and the token to the request (avoid repeated look-up)
     req.user = user;
+    req.token = token;
+
     next();
   } catch (error) {
     console.error(error);
