@@ -73,6 +73,15 @@ UserSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
+// add a user to return the data that should be shown publicly
+UserSchema.methods.toJSON = function () {
+  const user = this;
+  const userObj = user.toObject();
+  delete userObj.password;
+  delete userObj.tokens;
+  return userObj;
+};
+
 // add an additional static method for finding a user by creds
 UserSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
