@@ -64,7 +64,7 @@ router.patch('/tasks/:id', auth, async (req, res) => {
   const _id = req.params.id;
   try {
     const task = await Task.findOne({
-      _id: req.params.id,
+      _id,
       owner: req.user._id,
     });
 
