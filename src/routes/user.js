@@ -10,26 +10,7 @@ router.get('/users/me', auth, async (req, res) => {
   res.status(200).send(req.user);
 });
 
-router.get('/users/:id', auth, async (req, res) => {
-  // get user by id
-  const _id = req.params.id;
-  try {
-    const user = await User.findById(_id);
-    if (!user) {
-      res.status(404).send({
-        'Not Found': 'No User Exists for that ID',
-      });
-    }
-    res.status(200).send(user);
-  } catch (error) {
-    if (error) {
-      console.error(error);
-      res.status(400).send({ error: 'Invalid ID provided' });
-    }
-  }
-});
-
-router.patch('/users/:id', async (req, res) => {
+router.patch('/users/me', auth, async (req, res) => {
   const providedParams = Object.keys(req.body);
   const updatableParams = ['name', 'email', 'password', 'age'];
   const _id = req.params.id;
@@ -42,20 +23,14 @@ router.patch('/users/:id', async (req, res) => {
   }
 
   try {
-    const user = await User.findById(_id);
-
-    if (!user) {
-      res.status(404).send({ result: `No user for id ${_id}` });
-    }
-
     // update each user parameter with the provided parameter
     providedParams.forEach((updateParameter) => {
-      user[updateParameter] = req.body[updateParameter];
+      req.user[updateParameter] = req.body[updateParameter];
     });
 
-    await user.save();
+    await req.user.save();
 
-    res.status(200).send(user);
+    res.status(200).send(req.user);
   } catch (error) {
     // check for validation issue(s); inform user
     console.error(error);
@@ -131,16 +106,12 @@ router.post('/users/logoutall', auth, async (req, res) => {
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
-  const _id = req.params.id;
+// allow a user to remove their own profile
+router.delete('/users/me', auth, async (req, res) => {
+  // user is attached to request object
   try {
-    const user = await User.findByIdAndDelete(_id);
-    // no user to delete
-    if (!user) {
-      res.status(404).send({ status: 'No user with the provided id' });
-    } else {
-      res.status(202).send(user);
-    }
+    await req.user.remove();
+    res.send(req.user);
   } catch (error) {
     console.error(error._message);
     res.status(400).send({ status: error._message });
