@@ -114,7 +114,15 @@ UserSchema.pre('save', async function (next) {
 
   next();
 });
-const User = mongoose.model('user', UserSchema);
+
+// user's id refers to the 'owner' in the task model
+UserSchema.virtual('tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'owner',
+});
+
+const User = mongoose.model('User', UserSchema);
 
 module.exports = {
   User,
