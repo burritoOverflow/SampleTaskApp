@@ -3,14 +3,26 @@ const router = express.Router();
 const { Task } = require('../models/task');
 const auth = require('../middleware/auth');
 
+// GET /api/tasks?completed={boolean}
 router.get('/tasks', auth, async (req, res) => {
+  const match = {};
+
+  if (req.query.completed) {
+    match.completed = req.query.completed === 'true';
+  }
+
   try {
     // get the user's tasks
-    const tasks = await Task.find({ owner: req.user._id });
+    // const tasks = await Task.find({ owner: req.user._id });
 
     // alternatively:
-    // await req.user.populate('tasks').execPopulate();
-    // res.status(200).send(req.user.tasks);
+    await req.user
+      .populate({
+        path: 'tasks',
+        match,
+      })
+      .execPopulate();
+    res.status(200).send(req.user.tasks);
 
     res.status(200).send(tasks);
   } catch (error) {
