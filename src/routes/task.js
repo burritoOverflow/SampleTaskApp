@@ -4,6 +4,8 @@ const { Task } = require('../models/task');
 const auth = require('../middleware/auth');
 
 // GET /api/tasks?completed={boolean}
+// Use limit and skip for pagination
+// GET /api/tasks?limit={int}&skip={int}
 router.get('/tasks', auth, async (req, res) => {
   const match = {};
 
@@ -20,6 +22,10 @@ router.get('/tasks', auth, async (req, res) => {
       .populate({
         path: 'tasks',
         match,
+        options: {
+          limit: parseInt(req.query.limit),
+          skip: parseInt(req.query.skip),
+        },
       })
       .execPopulate();
     res.status(200).send(req.user.tasks);
