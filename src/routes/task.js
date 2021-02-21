@@ -6,11 +6,19 @@ const auth = require('../middleware/auth');
 // GET /api/tasks?completed={boolean}
 // Use limit and skip for pagination
 // GET /api/tasks?limit={int}&skip={int}
+// GET /api/tasks?sortBy=createdAt:{asc,desc}
 router.get('/tasks', auth, async (req, res) => {
   const match = {};
+  const sort = {};
 
   if (req.query.completed) {
     match.completed = req.query.completed === 'true';
+  }
+
+  if (req.query.sortBy) {
+    // parse the qs param
+    const parts = req.query.sortBy.split(':');
+    sort[parts[0]] = parts[1] === 'asc' ? 1 : -1;
   }
 
   try {
@@ -25,6 +33,7 @@ router.get('/tasks', auth, async (req, res) => {
         options: {
           limit: parseInt(req.query.limit),
           skip: parseInt(req.query.skip),
+          sort,
         },
       })
       .execPopulate();
