@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const { User } = require('../models/user');
 const auth = require('../middleware/auth');
@@ -116,6 +117,39 @@ router.delete('/users/me', auth, async (req, res) => {
     console.error(error._message);
     res.status(400).send({ status: error._message });
   }
+});
+
+// allow a user to upload an avatar photo
+const upload = multer({
+  dest: 'avatar',
+  limits: {
+    // 1MB limit for these photos
+    fileSize: 1000 ** 2,
+  },
+  fileFilter(req, file, cb) {
+    // called by multer, (req, file, cb)
+    const filenameLowercase = file.originalname.toLowerCase();
+
+    // get file extension to determine if appropriate file type (image, here)
+    if (
+      filenameLowercase.endsWith('.jpeg') ||
+      filenameLowercase.endsWith('.png') ||
+      filenameLowercase.endsWith('.jpg')
+    ) {
+      // valid
+      return cb(undefined, true);
+    } else {
+      // invalid
+      return cb(new Error('Please Upload an Image smaller than 1MB'));
+    }
+  },
+});
+
+router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+  // successful upload
+  res.status(201).send({
+    status: 'Upload Success',
+  });
 });
 
 module.exports = router;
