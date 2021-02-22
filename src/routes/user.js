@@ -119,11 +119,10 @@ router.delete('/users/me', auth, async (req, res) => {
   }
 });
 
-// allow a user to upload an avatar photo
+// allow a user to upload an avatar photo; configure multer
 const upload = multer({
-  dest: 'avatar',
   limits: {
-    // 1MB limit for these photos
+    // 1MB limit for these photos (1MB == 1,000,000 B)
     fileSize: 1000 ** 2,
   },
   fileFilter(req, file, cb) {
@@ -137,7 +136,7 @@ const upload = multer({
       filenameLowercase.endsWith('.jpg')
     ) {
       // valid
-      return cb(undefined, true);
+      cb(undefined, true);
     } else {
       // invalid
       return cb(new Error('Please Upload an Image smaller than 1MB'));
@@ -145,10 +144,33 @@ const upload = multer({
   },
 });
 
-router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
-  // successful upload
-  res.status(201).send({
-    status: 'Upload Success',
+// prettier-ignore
+router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+    // get the data (file buffer) from multer
+    const fileBuffer = req.file.buffer;
+
+    // store the file buffer with the user
+    req.user.avatar = fileBuffer;
+    await req.user.save();
+
+    // successful upload
+    res.status(201).send({
+      status: 'Upload Success',
+    });
+  },
+  (error, req, res, next) => {
+    // if error, we'll handle this more appropriately
+    res.status(400).send({ error: error.message });
+  },
+);
+
+// delete the avatar associated with the user initiating the request
+router.delete('/users/me/avatar', auth, async (req, res) => {
+  // setting a prop as undefined removes it from the db's entry
+  req.user.avatar = undefined;
+  await req.user.save();
+  res.status(200).send({
+    status: 'Delete Success',
   });
 });
 
