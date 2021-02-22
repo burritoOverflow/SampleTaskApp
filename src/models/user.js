@@ -65,6 +65,9 @@ const UserSchema = new mongoose.Schema(
       // store the image binary data with the user
       type: Buffer,
     },
+    avatarFilename: {
+      type: String,
+    },
   },
   {
     timestamps: true,

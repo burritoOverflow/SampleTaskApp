@@ -148,9 +148,11 @@ const upload = multer({
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
     // get the data (file buffer) from multer
     const fileBuffer = req.file.buffer;
+    const filename = req.file.originalname;
 
     // store the file buffer with the user
     req.user.avatar = fileBuffer;
+    req.user.avatarFilename = filename;
     await req.user.save();
 
     // successful upload
@@ -168,10 +170,38 @@ router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) 
 router.delete('/users/me/avatar', auth, async (req, res) => {
   // setting a prop as undefined removes it from the db's entry
   req.user.avatar = undefined;
+  req.user.avatarFilename = undefined;
+
   await req.user.save();
   res.status(200).send({
     status: 'Delete Success',
   });
+});
+
+// GET and serve the avatar for the user
+router.get('/users/:id/avatar', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.avatar) {
+      throw new Error('User does not have an avatar');
+    }
+
+    // found
+    const fileExtension = user.avatarFilename.split('.')[1];
+    const contentTypeStr = 'image/' + fileExtension;
+    res.set('Content-Type', 'image/jpg');
+
+    res.send(user.avatar);
+  } catch (error) {
+    res.status(404).send({
+      error,
+    });
+  }
 });
 
 module.exports = router;
